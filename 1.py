@@ -1,7 +1,7 @@
 from xml.etree import ElementTree as ET
 import requests
 
-RX1 = requests.get('http://10.0.101.110/data.xml')
+RX1 = "datarx1.xml"
 
 RX2 = "datarx2.xml"
 RX3 = "datarx3.xml"
