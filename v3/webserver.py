@@ -10,7 +10,7 @@ Author:
 
 from urllib.request import urlopen
 import xml.etree.ElementTree as ET
-from flask import Flask, render_template
+from flask import Flask, render_template, jsonify
 from apscheduler.schedulers.background import BackgroundScheduler
 
 app = Flask(__name__)
@@ -52,38 +52,7 @@ def MER_4(MER4):
             return round(float(page.find('value').text))
 
 
-def POWER_1(POWERSTAT_1):
-    for page in POWERSTAT_1.findall('parameter'):
-        if page.find('name').text == 'DB_DEMOD_LNB_PWR_1':
-            return page.find('value').text
-
-
-def POWER_2(POWERSTAT_2):
-    for page in POWERSTAT_2.findall('parameter'):
-        if page.find('name').text == 'DB_DEMOD_LNB_PWR_2':
-            return page.find('value').text
-
-
-def POWER_3(POWERSTAT_3):
-    for page in POWERSTAT_3.findall('parameter'):
-        if page.find('name').text == 'DB_DEMOD_LNB_PWR_3':
-            return page.find('value').text
-
-
-def POWER_4(POWERSTAT_4):
-    for page in POWERSTAT_4.findall('parameter'):
-        if page.find('name').text == 'DB_DEMOD_LNB_PWR_4':
-            return page.find('value').text
-
-
-def triax(triaxSTAT_4):
-    for page in triaxSTAT_4.findall('parameter'):
-        if page.find('name').text == 'DB_DEMOD_TRIAX_EN':
-            return page.find('value').text
-
-
 def retrieve_data():
-
     global frequency_rx4, mer_1_rx4, mer_2_rx4, mer_3_rx4, mer_4_rx4
 
     with urlopen(RX4_url) as d:
@@ -96,17 +65,43 @@ def retrieve_data():
     mer_3_rx4 = MER_3(rootrx4)
     mer_4_rx4 = MER_4(rootrx4)
 
-    # Update the data in the template or data store
-    # ...
+    # Print the values
+    print("Frequency: ", frequency_rx4)
+    print("MER 1: ", mer_1_rx4)
+    print("MER 2: ", mer_2_rx4)
+    print("MER 3: ", mer_3_rx4)
+    print("MER 4: ", mer_4_rx4)
+
 
 
 @app.route('/')
 def index():
-    # Retrieve the data from the template or data store
-    # ...
+    # Retrieve the data
+    retrieve_data()
 
-    return render_template('index.html', frequency_rx4=frequency_rx4, mer_1_rx4=mer_1_rx4,
-                           mer_2_rx4=mer_2_rx4, mer_3_rx4=mer_3_rx4, mer_4_rx4=mer_4_rx4)
+    # Create a dictionary with the data
+    data = {
+        'frequency_rx4': frequency_rx4,
+        'mer_1_rx4': mer_1_rx4,
+        'mer_2_rx4': mer_2_rx4,
+        'mer_3_rx4': mer_3_rx4,
+        'mer_4_rx4': mer_4_rx4
+    }
+
+    # Render the template with the data
+    return render_template('index.html', data=data)
+
+
+@app.route('/data')
+def get_data():
+    data = {
+        'frequency_rx4': frequency_rx4,
+        'mer_1_rx4': mer_1_rx4,
+        'mer_2_rx4': mer_2_rx4,
+        'mer_3_rx4': mer_3_rx4,
+        'mer_4_rx4': mer_4_rx4
+    }
+    return jsonify(data)
 
 
 if __name__ == '__main__':
