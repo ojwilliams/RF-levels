@@ -14,11 +14,6 @@
   <div class="container">
     <div class="row">
       <div class="col">
-        <h1>Vislink Receiver Data</h1>
-      </div>
-    </div>
-    <div class="row">
-      <div class="col">
         <div id="graph"></div>
       </div>
     </div>
@@ -32,9 +27,8 @@
   <script>
     // Function to create and update the graph
     function updateGraph(data) {
-      var xData = ['Frequency', 'MER 1', 'MER 2', 'MER 3', 'MER 4'];
+      var xData = ['MER 1', 'MER 2', 'MER 3', 'MER 4'];
       var yData = [
-        data.frequency_rx4,
         data.mer_1_rx4,
         data.mer_2_rx4,
         data.mer_3_rx4,
@@ -66,7 +60,7 @@
       };
 
       var layout = {
-        title: 'Vislink Receiver Data',
+        title: data.frequency_rx4,
         xaxis: { title: 'Parameter' },
         yaxis: { title: 'Value', range: [0, 30] } // Set the y-axis range to 0-30
       };

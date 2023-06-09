@@ -15,7 +15,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 app = Flask(__name__)
 
-RX4_url = 'http://10.0.101.112/data.xml'
+RX4_url = 'http://10.0.101.109/data.xml'
 frequency_rx4 = None
 mer_1_rx4 = None
 mer_2_rx4 = None
