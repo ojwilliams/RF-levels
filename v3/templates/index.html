@@ -14,6 +14,11 @@
   <div class="container">
     <div class="row">
       <div class="col">
+        <h1>Vislink Receiver Data</h1>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col">
         <div id="graph"></div>
       </div>
     </div>
@@ -27,22 +32,41 @@
   <script>
     // Function to create and update the graph
     function updateGraph(data) {
-      var xData = ['MER 1', 'MER 2', 'MER 3', 'MER 4'];
+      var xData = ['Frequency', 'MER 1', 'MER 2', 'MER 3', 'MER 4'];
       var yData = [
+        data.frequency_rx4,
         data.mer_1_rx4,
         data.mer_2_rx4,
         data.mer_3_rx4,
         data.mer_4_rx4
       ];
 
+      // Define color thresholds and corresponding colors
+      var colorThresholds = [10, 20];
+      var colors = ['red', 'orange', 'green'];
+
+      // Assign colors based on value ranges
+      var barColors = yData.map(function(value) {
+        if (value <= colorThresholds[0]) {
+          return colors[0]; // red
+        } else if (value <= colorThresholds[1]) {
+          return colors[1]; // orange
+        } else {
+          return colors[2]; // green
+        }
+      });
+
       var trace = {
         x: xData,
         y: yData,
-        type: 'bar'
+        type: 'bar',
+        marker: {
+          color: barColors // Set the color for each bar
+        }
       };
 
       var layout = {
-        title: data.frequency_rx4,
+        title: 'Vislink Receiver Data',
         xaxis: { title: 'Parameter' },
         yaxis: { title: 'Value', range: [0, 30] } // Set the y-axis range to 0-30
       };
@@ -72,8 +96,8 @@
       }, interval);
     }
 
-    // Set the interval to update the graph every 5 seconds (5000 ms)
-    setIntervalWithData('/data', 5000);
+    // Set the interval to update the graph every 2.5 seconds (2500 ms)
+    setIntervalWithData('/data', 2500);
   </script>
 </body>
 </html>
