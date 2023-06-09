@@ -35,28 +35,10 @@
         data.mer_4_rx4
       ];
 
-      // Define color thresholds and corresponding colors
-      var colorThresholds = [10, 20];
-      var colors = ['red', 'orange', 'green'];
-
-      // Assign colors based on value ranges
-      var barColors = yData.map(function(value) {
-        if (value <= colorThresholds[0]) {
-          return colors[0]; // red
-        } else if (value <= colorThresholds[1]) {
-          return colors[1]; // orange
-        } else {
-          return colors[2]; // green
-        }
-      });
-
       var trace = {
         x: xData,
         y: yData,
-        type: 'bar',
-        marker: {
-          color: barColors // Set the color for each bar
-        }
+        type: 'bar'
       };
 
       var layout = {
@@ -90,8 +72,8 @@
       }, interval);
     }
 
-    // Set the interval to update the graph every 2.5 seconds (2500 ms)
-    setIntervalWithData('/data', 2500);
+    // Set the interval to update the graph every 5 seconds (5000 ms)
+    setIntervalWithData('/data', 5000);
   </script>
 </body>
 </html>
