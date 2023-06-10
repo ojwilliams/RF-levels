@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Vislink Receiver Data</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+  <style>    
+    .center-content {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    
+    .graph-container {
+      width: 100%;
+      height: 50vh;
+    }
+  </style>
+
+</head>
+<body>
+  <div class="container-fluid center-content">
+    <div class="row">
+      <div class="col-md-6">
+        <div class="graph-container" id="graph1"></div>
+        <p id="timestamp1"></p>
+      </div>
+      <div class="col-md-6">
+        <div class="graph-container" id="graph2"></div>
+        <p id="timestamp2"></p>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-6">
+        <div class="graph-container" id="graph3"></div>
+        <p id="timestamp3"></p>
+      </div>
+      <div class="col-md-6">
+        <div class="graph-container" id="graph4"></div>
+        <p id="timestamp4"></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Function to create and update a single graph
+    function updateGraph(graphId, data) {
+      var xData = ['MER 1', 'MER 2', 'MER 3', 'MER 4'];
+      var yData = [
+        data[graphId]['mer_1_rx' + graphId.slice(-1)],
+        data[graphId]['mer_2_rx' + graphId.slice(-1)],
+        data[graphId]['mer_3_rx' + graphId.slice(-1)],
+        data[graphId]['mer_4_rx' + graphId.slice(-1)]
+      ];
+
+      var trace = {
+        x: xData,
+        y: yData,
+        type: 'bar',
+        marker: {
+          color: yData.map(value => {
+            if (value >= 0 && value <= 10) {
+              return 'red'; // Bar color for values between 0 and 10
+            } else if (value > 10 && value <= 20) {
+              return 'orange'; // Bar color for values between 10 and 20
+            } else if (value > 20 && value <= 30) {
+              return 'green'; // Bar color for values between 20 and 30
+            }
+          })
+        }
+      };
+
+      var layout = {
+        title: data[graphId]['frequency_rx' + graphId.slice(-1)],
+        xaxis: { title: 'Parameter' },
+        yaxis: { title: 'Value', range: [0, 30] },
+        plot_bgcolor: '#000000'
+      };
+
+      Plotly.newPlot(graphId, [trace], layout);
+
+      // Update the timestamp with current time
+      var timestampElement = document.getElementById('timestamp' + graphId.slice(-1));
+      var currentTime = new Date().toLocaleTimeString();
+      timestampElement.innerText = 'Last Updated: ' + currentTime;
+    }
+
+    // Function to periodically update a graph with data from the server
+    function setIntervalWithData(url, graphId, interval) {
+      setInterval(function() {
+        $.ajax({
+          url: url,
+          type: 'GET',
+          dataType: 'json',
+          success: function(data) {
+            updateGraph(graphId, data);
+          },
+          error: function(xhr, status, error) {
+            console.error('Error retrieving data:', error);
+          }
+        });
+      }, interval);
+    }
+
+    // Set the interval to update each graph every 5 seconds (5000 ms)
+    setIntervalWithData('/data', 'graph1', 5000);
+    setIntervalWithData('/data', 'graph2', 5000);
+    setIntervalWithData('/data', 'graph3', 5000);
+    setIntervalWithData('/data', 'graph4', 5000);
+  </script>
+</body>
+</html>
