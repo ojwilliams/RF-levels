@@ -111,4 +111,4 @@ if __name__ == '__main__':
     scheduler.add_job(retrieve_data, 'interval', seconds=3, max_instances=1)
     scheduler.start()
 
-    app.run()
+    app.run(debug=True, port=80, host='127.0.0.1')
