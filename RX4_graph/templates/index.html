@@ -10,92 +10,144 @@
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 
-  <style>    
-    .center-content {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
+  <style>
+    .graph-container {
+      height: 50vh;
     }
-    
-    #graph {
+
+    #graph-rx1, #graph-rx2, #graph-rx3, #graph-rx4 {
       width: 100%;
-      height: 100vh;
+      height: 100%;
     }
   </style>
 
 </head>
 <body>
-  <div class="container-fluid center-content">
+<div class="container-fluid">
+
+    <!-- First row for the first two graphs -->
     <div class="row">
-      <div class="col">
-        <div id="graph"></div>
-        <p id="timestamp"></p>
+      <div class="col graph-container">
+        <div id="graph-RX1"></div>
+        <p id="timestamp-RX1"></p>
       </div>
-    </div>
-    </div>
+      <div class="col graph-container">
+        <div id="graph-RX2"></div>
+        <p id="timestamp-RX2"></p>
+      </div>
+    </div> <!-- Closing the first row -->
+
+    <!-- Second row for the next two graphs -->
+    <div class="row">
+      <div class="col graph-container">
+        <div id="graph-RX3"></div>
+        <p id="timestamp-RX3"></p>
+      </div>
+      <div class="col graph-container">
+        <div id="graph-RX4"></div>
+        <p id="timestamp-RX4"></p>
+      </div>
+    </div> <!-- Closing the second row -->
+</div>
   </div>
 
   <script>
-    // Function to create and update the graph
-    function updateGraph(data) {
-      var xData = ['MER 1', 'MER 2', 'MER 3', 'MER 4'];
-      var yData = [
-        data.mer_1_rx4,
-        data.mer_2_rx4,
-        data.mer_3_rx4,
-        data.mer_4_rx4
-      ];
+function updateGraph(receiverKey, receiverData) {
+    var xData = ['MER 1', 'MER 2', 'MER 3', 'MER 4'];
+    var yData = [
+        receiverData.mer_1,
+        receiverData.mer_2,
+        receiverData.mer_3,
+        receiverData.mer_4
+    ];
 
-      var trace = {
+    var trace = {
         x: xData,
         y: yData,
         type: 'bar',
         marker: {
-          color: yData.map(value => {
-            if (value >= 0 && value <= 10) {
-              return 'red'; // Bar color for values between 0 and 10
-            } else if (value > 10 && value <= 20) {
-              return 'orange'; // Bar color for values between 10 and 20
-            } else if (value > 20 && value <= 30) {
-              return 'green'; // Bar color for values between 20 and 30
-            }
-          })
+            color: yData.map(value => {
+                if (value >= 0 && value <= 10) {
+                    return 'red';
+                } else if (value > 10 && value <= 20) {
+                    return 'orange';
+                } else if (value >= 20 && value <= 30) {
+                    return 'green';
+                }
+            })
         }
-      };
+    };
 
-      var layout = {
-        title: data.frequency_rx4,
-        xaxis: { title: 'Parameter' },
-        yaxis: { title: 'Value', range: [0, 30] }, // Set the y-axis range to 0-30
-      };
+    var layoutUpdate = {
+        title: receiverKey + ' Frequency: ' + receiverData.frequency,
+    };
 
-      Plotly.newPlot('graph', [trace], layout);
+    // Use animate method here for the data update
+    Plotly.animate('graph-' + receiverKey, {
+        data: [trace]
+    }, {
+        transition: {
+            duration: 1000,
+            easing: 'cubic-in-out'
+        },
+        frame: {
+            duration: 1000,
+            redraw: false
+        }
+    });
+  
+    // Use relayout method to update the title
+    Plotly.relayout('graph-' + receiverKey, layoutUpdate);
+}
 
-      // Update the timestamp with current time
-      var timestampElement = document.getElementById('timestamp');
-      var currentTime = new Date().toLocaleTimeString();
-      timestampElement.innerText = 'Last Updated: ' + currentTime;
-    }
 
-    // Function to periodically update the graph with data from the server
-    function setIntervalWithData(url, interval) {
-      setInterval(function() {
-        $.ajax({
-          url: url,
-          type: 'GET',
-          dataType: 'json',
-          success: function(data) {
-            updateGraph(data);
-          },
-          error: function(xhr, status, error) {
-            console.error('Error retrieving data:', error);
-          }
-        });
-      }, interval);
-    }
+function initializeGraph(receiverKey) {
+    var xData = ['MER 1', 'MER 2', 'MER 3', 'MER 4'];
+    var yData = [0, 0, 0, 0];  // initializing with zeros
 
-    // Set the interval to update the graph every 5 seconds (5000 ms)
+    var trace = {
+        x: xData,
+        y: yData,
+        type: 'bar',
+        marker: {
+            color: 'grey'  // Initialize with a neutral color
+        }
+    };
+
+    var layout = {
+        title: receiverKey + ' Initializing...',
+        yaxis: { title: 'Value', range: [0, 30] },
+    };
+
+    Plotly.newPlot('graph-' + receiverKey, [trace], layout);
+}
+
+// Initialize graphs for all receivers
+['RX1', 'RX2', 'RX3', 'RX4'].forEach(receiverKey => initializeGraph(receiverKey));
+
+
+function setIntervalWithData(url, interval) {
+  setInterval(function() {
+    $.ajax({
+      url: url,
+      type: 'GET',
+      dataType: 'json',
+      success: function(data) {
+        for (const [receiverKey, receiverData] of Object.entries(data)) {
+          updateGraph(receiverKey, receiverData);
+        }
+        // Update the global timestamp here
+        var timestampElement = document.getElementById('page-timestamp');
+        var currentTime = new Date().toLocaleTimeString();
+        timestampElement.innerText = 'Last Updated: ' + currentTime;
+      },
+      error: function(xhr, status, error) {
+        console.error('Error retrieving data:', error);
+      }
+    });
+  }, interval);
+}
+
     setIntervalWithData('/data', 5000);
   </script>
 </body>
