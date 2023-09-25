@@ -97,6 +97,10 @@ def retrieve_data(receiver_key):
 
     except HTTPError as e:
         print(f"Error accessing URL for {receiver_key}. URL: {receivers[receiver_key]['url']}. Error: {e}")
+    except ET.ParseError as e:
+        print(f"XML ParseError for {receiver_key}. URL: {receivers[receiver_key]['url']}. Error: {e}")
+
+
 
 @app.route('/')
 def index():
@@ -126,12 +130,7 @@ def settings():
 
 
 if __name__ == '__main__':
-    
     scheduler = BackgroundScheduler()
-
-
     scheduler.add_job(retrieve_data_for_all_receivers, 'interval', seconds=5)
-
     scheduler.start()
-    
-    app.run(debug=True, port=80, host='127.0.0.1')
+
