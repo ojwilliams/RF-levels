@@ -1,8 +1,7 @@
-from urllib.request import urlopen, HTTPError
+from urllib.request import urlopen, HTTPError, URLError
 import xml.etree.ElementTree as ET
 from flask import Flask, render_template, jsonify, request, redirect, url_for
 from apscheduler.schedulers.background import BackgroundScheduler
-import subprocess
 import json
 
 app = Flask(__name__)
@@ -13,6 +12,7 @@ receivers = {
     "RX3": {"url": "http://10.0.101.111/data.xml", "data": {}},
     "RX4": {"url": "http://10.0.101.112/data.xml", "data": {}}
 }
+
 def save_to_file():
     with open('receiver_settings.json', 'w') as f:
         json.dump(receivers, f)
@@ -28,10 +28,7 @@ def load_from_file():
     except json.JSONDecodeError:
         print("Error: receiver_settings.json contains invalid JSON. Please check or delete the file.")
 
-
-# Load the URLs from the file at the start of the application
 load_from_file()
-
 
 def retrieve_data_for_all_receivers():
     for key in receivers.keys():
@@ -62,20 +59,9 @@ def MER_4(MER4):
         if page.find('name').text == 'DB_DEMOD_MER_4':
             return round(float(page.find('value').text))
 
-def is_receiver_online(url):
-    # Extract IP address from the URL
-    ip_address = url.split('/')[2].split(':')[0]
-    param = '-n' if subprocess.sys.platform.lower() == 'win32' else '-c'
-    command = ['ping', param, '1', ip_address]
-    return subprocess.call(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE) == 0
-
 def retrieve_data(receiver_key):
     try:
-        if not is_receiver_online(receivers[receiver_key]["url"]):
-            print(f"Vislink receiver {receiver_key} is offline!")
-            return
-        
-        with urlopen(receivers[receiver_key]["url"]) as d:
+        with urlopen(receivers[receiver_key]["url"], timeout=0.5) as d:
             tree = ET.parse(d)
             root = tree.getroot()
 
@@ -95,12 +81,10 @@ def retrieve_data(receiver_key):
             else:
                 print(f"{key.capitalize()}: {value}")
 
-    except HTTPError as e:
+    except (HTTPError, URLError) as e:
         print(f"Error accessing URL for {receiver_key}. URL: {receivers[receiver_key]['url']}. Error: {e}")
     except ET.ParseError as e:
         print(f"XML ParseError for {receiver_key}. URL: {receivers[receiver_key]['url']}. Error: {e}")
-
-
 
 @app.route('/')
 def index():
@@ -118,19 +102,16 @@ def get_data():
 def settings():
     if request.method == 'POST':
         for key in receivers:
-            # Check if the checkbox for this receiver is checked
             if request.form.get(f'{key}_update') == 'yes':
                 ip_ending = request.form.get(f'{key}_url')
                 receivers[key]['url'] = f'http://10.0.101.{ip_ending}/data.xml'
-        save_to_file()  # Remember to save changes to file
+        save_to_file()
         return redirect(url_for('settings'))
-
     return render_template('settings.html', receivers=receivers)
-
-
 
 if __name__ == '__main__':
     scheduler = BackgroundScheduler()
     scheduler.add_job(retrieve_data_for_all_receivers, 'interval', seconds=5)
     scheduler.start()
+    app.run(host='0.0.0.0', port=5000, debug=False)
 
